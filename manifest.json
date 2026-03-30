@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Dark Pattern Detector",
+  "version": "1.0",
+  "description": "Detects and highlights dark patterns on websites.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ]
+}
