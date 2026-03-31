@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Dark Pattern Detector",
+  "version": "1.0",
+  "description": "Detects dark patterns on websites using React.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["http://localhost:3000/*"],
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "favicon.svg",
+      "48": "favicon.svg",
+      "128": "favicon.svg"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "16": "favicon.svg",
+    "48": "favicon.svg",
+    "128": "favicon.svg"
+  }
+}
