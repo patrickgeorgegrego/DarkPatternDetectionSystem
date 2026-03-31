@@ -1,42 +1,29 @@
-// content.ts - Handles scanning and policy summarization via external API
-
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  console.log("Content script received message:", message);
-
-  if (message.action === "scan") {
-    // Return specific dummy patterns as requested
-    sendResponse({ 
-      patterns: ["Fake urgency", "Hidden fees"] 
-    });
-  }
-
-  if (message.action === "summarize") {
+  if (message.action === "getDomData") {
+    // 1. Grab visible text for backend spaCy modeling
     const text = document.body.innerText;
-
-    // Send the extracted text to the local summarization server
-    fetch("http://localhost:3000/summarize", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ text })
-    })
-    .then(response => response.json())
-    .then(data => {
-      // Return the response from the server back to the popup
-      sendResponse(data);
-    })
-    .catch(error => {
-      console.error("Summarization error:", error);
-      sendResponse({ 
-        summary: "Error: Could not connect to the summarization server at http://localhost:3000/summarize.",
-        risk_level: "High"
-      });
+    
+    // 2. Scan core DOM Nodes
+    const detected_elements: string[] = [];
+    const checkboxes = document.querySelectorAll('input[type="checkbox"], [role="checkbox"]');
+    checkboxes.forEach(cb => {
+        const isChecked = (cb as HTMLInputElement).checked || cb.getAttribute('aria-checked') === 'true';
+        if (isChecked) {
+           let parent = cb.closest('label');
+           let txt = parent ? parent.innerText.toLowerCase() : "";
+           detected_elements.push(`pre-checked box: ${txt.slice(0, 30)}`);
+        }
     });
 
-    // Return true to indicate we will send a response asynchronously
-    return true;
-  }
+    const buttons = document.querySelectorAll('button, a, [role="button"]');
+    buttons.forEach(btn => {
+        if (btn.textContent) {
+          detected_elements.push(`button: ${btn.textContent.trim().toLowerCase()}`);
+        }
+    });
 
+    // 3. Return payload representation back to Popup React App for API forwarding
+    sendResponse({ text, detected_elements });
+  }
   return true;
 });
