@@ -193,7 +193,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         async function retrieveAnalysis() {
             try {
                 // Submit Privacy Policy Logic
-                const summaryReq = fetch('http://127.0.0.1:8000/summarize', {
+                const summaryReq = fetch('http://127.0.0.1:3000/summarize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -206,7 +206,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
 
                 // Submit UX UI Elements Logic
-                const analyzeReq = fetch('http://127.0.0.1:8000/analyze', {
+                const analyzeReq = fetch('http://127.0.0.1:3000/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
