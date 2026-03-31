@@ -34,7 +34,7 @@ function highlightElement(element, message) {
     if (!element) return;
     injectSneakyStyles();
     element.classList.add('sneaky-highlight');
-    
+
     // Log message to console for developer inspection
     console.log("Dark Pattern Detector Highlighted:", message, element);
 }
@@ -57,7 +57,7 @@ function findPrivacyContent() {
 
     // Try to find the most likely content container
     const contentContainer = document.querySelector('main, article, .content, #content, [role="main"]');
-    
+
     if (contentContainer) extractedText = contentContainer.innerText;
     else extractedText = document.body.innerText;
 
@@ -66,7 +66,7 @@ function findPrivacyContent() {
 
     return {
         hasPrivacyLinksFound: privacyLinks.length > 0,
-        text: extractedText.slice(0, 50000) 
+        text: extractedText.slice(0, 50000)
     };
 }
 
@@ -77,13 +77,13 @@ function findPrivacyContent() {
 function detectPrecheckedBoxes() {
     let detected = [];
     const checkboxes = document.querySelectorAll('input[type="checkbox"], [role="checkbox"]');
-    
+
     checkboxes.forEach(checkbox => {
         let isChecked = checkbox.checked;
         if (checkbox.getAttribute('role') === 'checkbox') {
             isChecked = checkbox.getAttribute('aria-checked') === 'true';
         }
-        
+
         if (isChecked) {
             let labelText = "";
             let parentLabel = checkbox.closest('label');
@@ -94,11 +94,11 @@ function detectPrecheckedBoxes() {
             } else if (checkbox.nextElementSibling) {
                 labelText = checkbox.nextElementSibling.innerText.toLowerCase();
             }
-            
+
             // Check for high-risk auto-opt-in terms
             const keywords = ["autopay", "subscribe", "terms", "marketing"];
             const isSneaky = keywords.some(kw => labelText.includes(kw));
-            
+
             if (isSneaky) {
                 detected.push(`pre-checked box: sneaky opt-in detected`);
                 highlightElement(checkbox, "Sneaky Pre-selection Opt-In");
@@ -108,7 +108,7 @@ function detectPrecheckedBoxes() {
             }
         }
     });
-    
+
     return detected;
 }
 
@@ -119,13 +119,13 @@ function detectHiddenClose() {
     let detected = [];
     const elements = document.querySelectorAll('div, section, dialog, [role="dialog"]');
     const windowArea = window.innerWidth * window.innerHeight;
-    
+
     elements.forEach(el => {
         const style = window.getComputedStyle(el);
         if (style.position === 'fixed' || style.position === 'absolute') {
             const rect = el.getBoundingClientRect();
             const area = rect.width * rect.height;
-            
+
             // If overlay covers >20% of screen
             if (area > (windowArea * 0.20)) {
                 const text = el.innerText.toLowerCase();
@@ -134,7 +134,7 @@ function detectHiddenClose() {
                     // Check text strictly inside tags, ARIA labels, or distinct X identifiers
                     return text.includes(`\n${kw}\n`) || html.includes(`aria-label="${kw}"`) || html.includes(`>${kw}<`);
                 });
-                
+
                 // If there's no visible close indicator
                 if (!hasCloseIndicator) {
                     detected.push("hidden exit");
@@ -167,7 +167,7 @@ function scanForPatterns() {
     // Dynamic Nodes Checking
     const prechecked = detectPrecheckedBoxes();
     const hiddenExits = detectHiddenClose();
-    
+
     // Grab actionable buttons for NLP Engine (Confirmshaming check)
     const buttons = document.querySelectorAll('button, a, [role="button"]');
     buttons.forEach(btn => {
@@ -196,9 +196,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const summaryReq = fetch('http://127.0.0.1:8000/summarize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         url: window.location.href,
-                        text: contentData.text || "No readable text found." 
+                        text: contentData.text || "No readable text found."
                     })
                 }).then(res => {
                     if (!res.ok) throw new Error("Summarize Endpoint Error");
@@ -209,9 +209,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const analyzeReq = fetch('http://127.0.0.1:8000/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         url: window.location.href,
-                        detected_elements: patternFlags 
+                        detected_elements: patternFlags
                     })
                 }).then(res => {
                     if (!res.ok) throw new Error("Analyze Endpoint Error");
@@ -219,7 +219,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
 
                 const [summaryReply, analyzeReply] = await Promise.all([summaryReq, analyzeReq]);
-                
+
                 sendResponse({
                     status: "success",
                     data: {
